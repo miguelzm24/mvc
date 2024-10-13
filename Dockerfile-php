@@ -1,0 +1,30 @@
+FROM php:8.1-fpm
+
+
+# Establecer el directorio de trabajo en /var/www/html
+WORKDIR /var/www/html
+
+# Copiar el código fuente al contenedor
+COPY ./src /var/www/html
+
+
+# Installing dependencies for the PHP modules
+RUN apt-get update \
+    && apt-get install -y zip curl libcurl3-dev libzip-dev libpng-dev libonig-dev libxml2-dev
+    # libonig-dev is needed for oniguruma which is needed for mbstring
+
+# Installing additional PHP modules
+RUN docker-php-ext-install curl gd mbstring mysqli pdo pdo_mysql xml
+
+# Install Composer so it's available
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Instalar Xdebug
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
+
+# Copiar un archivo de configuración de Xdebug
+COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+
+# Exponer el puerto 9003 para Xdebug
+EXPOSE 9003
